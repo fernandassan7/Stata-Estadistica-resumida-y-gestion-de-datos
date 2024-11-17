@@ -1,0 +1,199 @@
+***************************
+*LISTA DE FUNCIONES ÚTILES*
+***************************
+
+*1. INSERTAR RUTA DE LA CARPETA DONDE SE ENCUENTRAN LOS DATOS
+cd "ruta de la carpeta"
+
+*2. ABRIR DE ARCHIVOS REGISTRO (para cargar comandos y resultados)
+*Cerrar archivos log previos
+capture log close
+*Abrir nuevo archivo log 
+log using nombredelarchivo.log, text replace
+
+*3. CARGAR BASE DE DATOS 
+*De origen dta
+*La opción "clear" borra primero los datos actuales de la memoria
+use nombrebase.dta, clear
+
+*De origen xlsx, xls
+cd "ruta de la carpeta"
+import excel nombredelarchivo.xlsx, clear // Importa las celdas donde se encuentra la información, sin especificar encabezados ni variables
+import excel nombredelarchivo, cellrange(A2:L53) clear // Importa la información, sin especificar encabezados ni variables
+import excel nombredelarchivo, cellrange(A2:L53) firstrow clear // Importa información con variables y encabezados
+
+
+*4. GUARDAR ARCHIVO EN FORMATO DTA
+save nombredelarchivo.dta, replace // Guarda la base de datos importada, creada o modificada en formato dta y reemplaza cualquier base en este mismo fomarto existente con el mismo nombre
+
+
+*5. VISUALIZACIÓN DE DATOS
+*Muestra el número de observaciones y la cantidad de variables, su nombre, tipo, formato, etiqueta d evalor y variable
+describe
+
+*Muestra el contenido del archivo de datos
+browse
+
+*Permite editar el contenido del archivo de datos
+edit
+
+*Enumera el nombre de las variables y sus valores por observación
+list //Enlista todas las observaciones
+list 1/10 //Enlista 10 de las observaciones, 1/n, donde n es el númeor de observaciones que queremos ver
+
+*Detalles de la variable: Nombre, Etiqueta de la variable,Tipo, Rango, Valores faltantes, Media, Desviación estándar, Produce percentiles para variables continuas y frecuencias para variables ficticias o categóricas.
+codebook VAR
+
+*6. ESTADÍSTICAS DESCRIPTIVAS
+***Para variables continuas
+*Muestra la cantidad de observaciones, la media, la desviación estándar, el valor mínimo y el valor máximo de la variable
+summarize // El comando por si solo, genera el resumen de estad´siticas parra todas las variables 
+summarize VAR // Genera las estadísticas para esa variable
+sum VAR // Se puede abreviar el comando
+
+*Muestra más estadísticas de resumen de la variable, incluidos varios percentiles, los cuatro valores más pequeños y los cuatro más grandes, la varianza, la asimetría y la curtosis
+summarize VAR, detail
+
+*Buscar estadísticas resumidas para diferentes grupos
+summarize VAR1 if VAR2==1 // Hay que generar un comando para cada categoría 
+bysort female: summarize age // Genera automáticamente el resumen de VAR1 para cada una de las categorías de VAR2
+
+***Para variables categóricas
+*Recuentos de frecuencia y porcentajes
+tabulate VAR // Tabulación unidireccional 
+tabulate VAR, nolabel // Tabulación unidireccional sin etiquetas (en la tabla se observa 0 y 19
+tabulate VAR, missing // Tabulación que otorga una categoría adicional para las observaciones faltantes
+tabulate VAR1 VAR2 // Tabulación de dos vías para 2 variables categóricas combinadas, ej: raza por género
+tabulate VAR1 VAR2, col // Tabulación a dos vías con porcentajes en las columnas 
+tabulate VAR1 VAR2, row // Tabulación a dos vías con porcentajes en las filas
+
+***Para variables categóricas y continuas
+*Tablas de estadísticas resumen de una variable continua VAR3 para cada categoría de la variable categórica VAR1 (Ej: Resumen de edad para cada categoría de género)
+tabulate VAR1, summarize(VAR3) // Tabla más compacta
+bysort VAR1: summarize VAR3
+
+*Crear tablas personalizadas de estadísticas de resumen
+tabstat VAR // Calcula únicamente el promedio (media) para v. continuas y el porcentaje de valores 1 para v. categóricas (se pueden agregar más de 1 variable)
+tabstat VAR, statistics(mean sd median min max count) // Calcula media, desviación, mínimo, máximo y contar observaciones
+tabstat VAR1 VAR2 VAR3 VAR4, statistics(mean sd p50 min max N) // Calcula media, desviación p50, mínimo, máximo y observaciones (estadísticas en columna y variables en filas)
+tabstat VAR1 VAR2 VAR3 VAR4, statistics(mean sd median min max count) columns(statistics) // Variables en columnas y estadísticas en filas
+
+
+*7. FORMATO DE LOS NÚMEROS
+*La opción "format" especifica el formato de salida para todas las estadísticas
+*El primer número entero especifica el ancho del formato (Q de números)
+*El segundo número entero especifica la cantidad de decimales
+*Formato f ó g
+*Ej: format(%9.2fc)agrega comas a los números grandes y format(%9.0g)permite que Stata decida los lugares decimales
+tabstat VAR1 VAR2 VAR3 VAR4, statistics(mean sd median min max count) columns(statistics) format(%9.2f) //Máximo 9 dígitos y 2 decimales
+tabstat VAR1 VAR2 VAR3 VAR4, statistics(mean sd median min max count) columns(statistics) format(%9.0g) //Máximo 9 dígitos y 0 decimales (por decisión de stata)
+tabstat age hwage schooling female, statistics(mean sd median min max count) columns(statistics) format(%9.0gc) //Máximo 9 dígtos y separación de miles, los decimales los decide stata
+
+*8. TABLAS PERSONALIZADAS V. CONTINUA PARA CATEGORIA
+tabstat VAR1, statistics(mean sd count) by(VAR3) columns(statistics) format(%10.0gc) //Tabla de media, desviación y observaciones para una variable continua con base en las categorías de otra variable, Máximo 10 dígtos y separación de miles, los decimales los decide stata
+
+*9.REGRESIÓN LINEAL
+regress VARY VARX1
+
+*10. NORMALIDAD DE UNA VARIABLE
+*Asimetría: +: distribución es más larga hacia la derecha & -:distribución es más larga hacia la izquierda
+*Curtosís: Normal (mesocúrtica)cercana a 3 y Excesiva sería 0
+summarize VAR, detail // Permite ver los valores de asimetría (Skewness) y curtosís (Kurtosis)
+inspect VAR // Permite ver Q de valores válidos y faltantes, positivos y negativos, rango de valores, frecuencia y porcentaje, distribución de los datos gráfica
+sktest VAR // Prueba de normalidad basada en asimetría y curtosis - H0: La variable se distribuye normalmente (Si el p valor < 5%, se rechaza H0)
+histogram VAR // Visualización de la distribución de los datos
+
+
+*11. CREACIÓN DE VARIABLES
+*Crear variable continua
+generate nombreVARNEW=funciónconlavariableexistente // las variables se puede crear a partir de otras ya existentes, con operaciones como suma, multiplicación, logaritmo ln, división, etc
+
+*Crear variable dummy
+generate nombreVARNEW=0
+replace nombreVARNEW=1 if VAREXISTENTE>12 // >12 puede ser cualquier parametro =,<,>, etc
+recode VARCONTINUA (datoinicial/datofinal=0) (datoinicial/datosfinal=1), generate VARNEW //Crear variable dummy recodificando variable continua existente, de este mismo modo se pueden crear más de 2 categorías
+
+*Agregar etiqueta de valores
+recode VARCONTINUA (datoinicial/datofinal=0 "nombreetiqueta") (datoinicial/datosfinal=1 "nombreetiqueta"), generate VARNEW 
+
+
+*12. RENOMBRAR VARIABLES
+rename oldvar newvar
+*Agrear sufijo
+rename * *sufijo // Se agrega a todas las variables del archivo
+*Quitar sufijo
+rename *sufijo*
+
+*13. ETIQUETAS
+*Para variables
+label variable VAR "Descripción de la etiqueta" // Describe que información contiene la variable, ej. edad de los trabajadores
+
+*Para base de datos
+label data "Descripción de la etiqueta" // Describe que información contiene la base de datos, ej. Censo colombia 2004
+
+*Para valores (Describir que signifca cada categoría)
+label define nombreetiqueta 0 "value label for 0" 1 "value label for 1" //Definir etiqueta de valor
+label values VAR nombreetiqueta // Asignar la etiqueta de valor a la variable VAR
+label list // Para conocer todas las etiquetas de valores en el conjunto de datos
+label drop nombreetiqueta // Eliminar una etiqueta de valor
+
+
+*14. CREACIÓN DE VARIABLES PARA OBSERVACIONES ESPECIFICAS DE VARIABLES EXISTENTES
+egen VARNEW=function() //Donde function() es una función como mean(), sd(), rowmean(), cut()
+help egen // Listado de funciones disponibles
+egen VARNEW=mean(VAR1) //Creación de una variable que contiene el promedio de la VAR1
+egen VARNEW=sd(VAR1) //Creación de una variable que contiene la desviación estándar de la VAR1
+egen VARNEW=rowmean(VAR1 VAR2) // Creación variable con el promedio de otras 2 variables
+egen VARNEW=rowmax(VAR1 VAR2) // Creación variable con el máximo de otras 2 variables
+egen VARNEW=rowmin(VAR1 VAR2) // Creación variable con el mínimo de otras 2 variables
+egen VARNEW=cut(VAR1), group(4) // Creación varible con los cuartiles otra
+bysort VARCATEGORICA: egen VARNEW=mean(VAR1) // Creación de una variable que contiene el promedio de la VAR1 para cada una de las categorías
+
+
+*15. ELIMINAR Y MANTENER VARIABLES Y OBSERVACIONES
+drop VAR // Eliminar variable
+keep VAR // Mantener variable
+drop if VARCATEGORICA==0 // Eliminar esta categoría
+keep if VARCONTINUA<,>,=# // Conservar determinados valores
+
+
+*16. VARIABLES CADENA Y NUMÉRICAS
+destring num, generate(num2) // Convertir variables de cadena con caracteres numéricos en variables numéricas
+destring VAR1, replace // Reemplazar la variable de cadena existente por la nueva variable numérica
+tostring VAR1, replace // Convertir de nuevo las variables numéricas en variables de cadena
+encode health_report, generate(health_report2) // Convertir variables de cadena con caracteres no numéricos en variables numéricas (Escalas, ej. De malo, regular, bueno, muy bueno y excelente a escala de 1 a 5)
+decode health_report2, generate(health_report3) // Revertir el proceso
+
+
+*17. Combinar bases de datos
+*Agrear observaciones de una base de datos existente a la que estamos trabajando
+use bd1.dta, clear
+append using bd2.dta
+
+*Bases de datos que comparten la misma variable
+use bd1.dta, clear
+merge 1:1 id using bd2.dta // Fusiona las bases
+
+*Existen cuatro tipos principales de fusiones: una a una, varias a una, una a varias y varias a varias
+
+*18. VARIABLES DUMMY
+generate college=0 if schooling<
+replace college=1 if schooling>12 & schooling<
+
+recode schooling (6/12=0) (13/17=1), generate(college)
+
+tabulate race, generate(racedummy) // Crea una variable para cada categotía =1, y el resto conforman =0
+
+bysort health: egen wage_group_mean=mean(hwage) //Crear una variable con los promedios de cada una VARCONTINUA para acda una de las categorías de una VARCATEGORICA
+
+*19. FUNCIONAMIENTO DENTRO DE LOS GRUPOS
+bysort VARCATEGORICA: summarize VARCONTINUA
+
+list hwage in 1/10 // En listar las primeras 10 observaciones de salario
+display hwage[1] //Observación 1
+display hwage[10] // Observación 10
+display hwage[_N] // Valor promedio 
+generate hwage2=hwage[_n-1] // Generar una variable con la observación anterior 
+
+bysort health: generate id=_n //Crear variable que enumera el número de observaciones 1 a 1
+bysort health: generate total=_N //Crear variable con la cantidad total de observaciones
